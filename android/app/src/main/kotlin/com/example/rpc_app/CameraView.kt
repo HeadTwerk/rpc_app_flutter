@@ -23,11 +23,14 @@ import androidx.lifecycle.LifecycleOwner
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.platform.PlatformView
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import androidx.camera.core.ImageProxy
+import android.os.Handler
+import android.os.Looper
 
 class CameraView (
     private val context: Context,
@@ -54,6 +57,14 @@ class CameraView (
     private var minHandDetectionConfidence: Float = GestureRecognizerHelper.DEFAULT_HAND_DETECTION_CONFIDENCE
     private var minHandTrackingConfidence: Float = GestureRecognizerHelper.DEFAULT_HAND_TRACKING_CONFIDENCE
     private var minHandPresenceConfidence: Float = GestureRecognizerHelper.DEFAULT_HAND_PRESENCE_CONFIDENCE
+
+    // EventChannel for sending gesture results to Flutter
+    private val eventChannel: EventChannel = EventChannel(messenger, "gesture_recognition_stream_$id")
+    private var eventSink: EventChannel.EventSink? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    
+    // Flag to prevent processing after disposal
+    private var isActive = true
 
     init {
 
@@ -127,6 +138,19 @@ class CameraView (
         constraintLayout.bringChildToFront(overlayView)
         constraintSet.applyTo(constraintLayout)
 
+        // Set up EventChannel stream handler
+        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                eventSink = events
+                Log.d("CameraView", "EventChannel listener attached")
+            }
+
+            override fun onCancel(arguments: Any?) {
+                eventSink = null
+                Log.d("CameraView", "EventChannel listener cancelled")
+            }
+        })
+
         backgroundExecutor.execute {
             gestureRecognizerHelper = GestureRecognizerHelper(
                 context = context,
@@ -147,15 +171,19 @@ class CameraView (
 
     
     override fun dispose() {
-        // // Clean up gesture recognizer if initialized
-        // if(this::gestureRecognizerHelper.isInitialized) {
-        //     gestureRecognizerHelper.clearGestureRecognizer()
-        // }
+        // Clean up gesture recognizer if initialized
+        if(this::gestureRecognizerHelper.isInitialized) {
+            gestureRecognizerHelper.clearGestureRecognizer()
+        }
 
-        // // Unbind all camera use cases
-        // cameraProvider?.unbindAll()
+        // Clean up event channel
+        eventSink = null
+        eventChannel.setStreamHandler(null)
 
-        // // Shutdown background executor
+        // Unbind all camera use cases
+        cameraProvider?.unbindAll()
+
+        // Shutdown background executor
         // backgroundExecutor.shutdown()
         // try {
         //     if (!backgroundExecutor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
@@ -256,6 +284,29 @@ class CameraView (
             runningMode = RunningMode.LIVE_STREAM
         )
         overlayView.invalidate()
+
+        // Send gesture data to Flutter via EventChannel
+        val gestures = resultBundle.results.first().gestures()
+        if (gestures.isNotEmpty() && gestures[0].isNotEmpty()) {
+            val topGesture = gestures[0][0]
+            val gestureName = topGesture.categoryName()
+            val confidence = topGesture.score()
+
+            // Only send if gesture is not 'None'
+            if (gestureName != "None") {
+                val gestureData = mapOf(
+                    "gestureName" to gestureName,
+                    "confidence" to confidence,
+                    "timestamp" to System.currentTimeMillis()
+                )
+
+                // Send on main thread to avoid threading issues
+                mainHandler.post {
+                    eventSink?.success(gestureData)
+                    Log.d("CameraView", "Sent gesture to Flutter: $gestureName (${confidence})")
+                }
+            }
+        }
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {

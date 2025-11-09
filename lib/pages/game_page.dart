@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import "dart:io";
 import "package:flutter/services.dart";
-import 'package:rpc_app/components/CameraComponents/camera_view.dart';
+import 'package:rpc_app/components/Game/game_area.dart';
 // import 'package:permission_handler/permission_handler.dart';
 
-class CameraPage extends StatefulWidget {
-  const CameraPage({super.key});
+class GamePage extends StatefulWidget {
+  const GamePage({super.key});
 
   @override
-  State<CameraPage> createState() => _CameraPageState();
+  State<GamePage> createState() => _GamePageState();
 }
 
-class _CameraPageState extends State<CameraPage> {
+class _GamePageState extends State<GamePage> {
   // var _cameraPermissionGranted = false;
   static const cameraPermissionChannel = MethodChannel('camera_permission');
   bool _cameraPermissionGranted = Platform.isAndroid ? false : true;
@@ -58,9 +58,9 @@ class _CameraPageState extends State<CameraPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Camera Page')),
+      appBar: AppBar(title: const Text('Play Gesture Game')),
       body: _cameraPermissionGranted
-          ? SafeArea(child: const CameraView())
+          ? SafeArea(child: const GameArea())
           : SafeArea(
               child: Center(child: Text('Camera permission not granted.')),
             ),

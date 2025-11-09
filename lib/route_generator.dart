@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rpc_app/base_app.dart';
-import 'package:rpc_app/pages/camera_page.dart';
+import 'package:rpc_app/home_app.dart';
+import 'package:rpc_app/pages/game_page.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -8,9 +8,9 @@ class RouteGenerator {
 
     switch (settings.name) {
       case '/':
-        return MaterialPageRoute(builder: (_) => const BaseApp());
-      case '/camera':
-        return MaterialPageRoute(builder: (_) => const CameraPage());
+        return MaterialPageRoute(builder: (_) => const HomeApp());
+      case '/gamePage':
+        return MaterialPageRoute(builder: (_) => const GamePage());
       // Add more cases for other routes as needed
       default:
         return _errorRoute();

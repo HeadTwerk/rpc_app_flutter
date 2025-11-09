@@ -3,8 +3,8 @@ import 'constants.dart' as constants;
 import 'components/Drawer/app_drawer.dart';
 import 'package:rpc_app/route_generator.dart';
 
-class BaseApp extends StatelessWidget {
-  const BaseApp({super.key});
+class HomeApp extends StatelessWidget {
+  const HomeApp({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -23,9 +23,9 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('Camera Page'),
+            title: const Text('Play'),
             onTap: () {
-              Navigator.of(context).pushNamed('/camera');
+              Navigator.of(context).pushNamed('/gamePage');
             },
           ),
           // ListTile(
