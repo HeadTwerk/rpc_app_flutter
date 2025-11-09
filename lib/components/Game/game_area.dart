@@ -5,6 +5,7 @@ import 'package:rpc_app/components/Game/result.dart';
 import 'package:rpc_app/components/Game/reset_button.dart';
 import 'package:rpc_app/components/Camera/camera_view.dart';
 import 'package:rpc_app/constants.dart';
+import 'package:rpc_app/state/game_stats_provider.dart';
 
 class GameArea extends StatefulWidget {
   const GameArea({super.key});
@@ -28,13 +29,22 @@ class _GameAreaState extends State<GameArea> {
   }
 
   void _onGestureDetected(String gesture, double confidence) {
+    // Determine outputs first
+    final mappedPlayer = gestureOutputMap[gesture] ?? 'Rock';
+    final systemChoice = systemChoices[_random.nextInt(systemChoices.length)];
+    // Record outcome via provider (after mapping, before setState UI rebuild)
+    final provider = GameStatsProvider.of(context);
+    if (provider != null) {
+      if (mappedPlayer != systemChoice) {
+        final isWin = winningConditions[mappedPlayer] == systemChoice;
+        provider.recordResult(isWin: isWin, isLoss: !isWin);
+      }
+    }
     setState(() {
       _detectedGesture = gesture;
       _gestureConfidence = confidence;
-      // Map gesture to game choice
-      playerOutput = gestureOutputMap[gesture] ?? 'Rock'; // Default to Rock
-      // Generate random system choice
-      systemOutput = systemChoices[_random.nextInt(systemChoices.length)];
+      playerOutput = mappedPlayer;
+      systemOutput = systemChoice;
     });
   }
 

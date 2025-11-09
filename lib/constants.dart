@@ -31,3 +31,14 @@ const resultMessages = {
   'lose': 'You Lose!',
   'draw': 'Draw!',
 };
+
+// Persistence keys & collection constants for local game stats
+const statsCollection = 'game_stats';
+const statsDocId = 'rps';
+const statsFieldWins = 'wins';
+const statsFieldLosses = 'losses';
+
+// UI labels for stats display
+const statsTitle = 'Your Stats';
+const winsLabel = 'Wins';
+const lossesLabel = 'Losses';
