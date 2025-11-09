@@ -61,7 +61,9 @@ class CameraView (
     private val mainHandler = Handler(Looper.getMainLooper())
     
     // Flag to prevent processing after disposal
-    private var isActive = true
+    @Volatile private var isActive = true
+    // Flag to stop after first successful gesture capture
+    @Volatile private var hasCaptured = false
 
     init {
 
@@ -258,7 +260,11 @@ class CameraView (
             .build()
 
         imageAnalyzer?.setAnalyzer (backgroundExecutor, { imageProxy ->
-            recgonizeHand(imageProxy)
+            if (hasCaptured || !isActive) {
+                imageProxy.close()
+            } else {
+                recgonizeHand(imageProxy)
+            }
         })
 
    
@@ -281,21 +287,32 @@ class CameraView (
     }
 
     private fun recgonizeHand(imageProxy: ImageProxy) {
+        if (hasCaptured || !isActive) {
+            imageProxy.close(); return
+        }
         // Check if we're still active and helper is initialized
-        if (!isActive || !this::gestureRecognizerHelper.isInitialized) {
-            imageProxy.close()
-            return
+        if (!this::gestureRecognizerHelper.isInitialized || gestureRecognizerHelper.isClosed()) {
+            imageProxy.close(); return
         }
-        
-        // Check if gesture recognizer is closed
-        if (gestureRecognizerHelper.isClosed()) {
-            imageProxy.close()
-            return
+        gestureRecognizerHelper.recognizeLiveStream(imageProxy = imageProxy)
+    }
+
+    private fun stopCaptureAfterFirstGesture() {
+        if (hasCaptured) return
+        hasCaptured = true
+        isActive = false
+        // Stop analyzer immediately
+        imageAnalyzer?.clearAnalyzer()
+        // Unbind camera use cases to halt frame delivery
+        cameraProvider?.unbindAll()
+        // Close recognizer on background thread
+        backgroundExecutor.execute {
+            if (this::gestureRecognizerHelper.isInitialized && !gestureRecognizerHelper.isClosed()) {
+                gestureRecognizerHelper.clearGestureRecognizer()
+            }
         }
-        
-        gestureRecognizerHelper.recognizeLiveStream(
-            imageProxy = imageProxy
-        )
+        // Prevent further event emissions
+        eventSink = null
     }
 
     override fun onError(error: String, errorCode: Int) {
@@ -316,23 +333,24 @@ class CameraView (
 
         // Send gesture data to Flutter via EventChannel
         val gestures = resultBundle.results.first().gestures()
-        if (gestures.isNotEmpty() && gestures[0].isNotEmpty()) {
+        if (!hasCaptured && gestures.isNotEmpty() && gestures[0].isNotEmpty()) {
             val topGesture = gestures[0][0]
             val gestureName = topGesture.categoryName()
             val confidence = topGesture.score()
-
-            // Only send if gesture is not 'None'
             if (gestureName != "None") {
                 val gestureData = mapOf(
                     "gestureName" to gestureName,
                     "confidence" to confidence,
                     "timestamp" to System.currentTimeMillis()
                 )
-
-                // Send on main thread to avoid threading issues
                 mainHandler.post {
-                    eventSink?.success(gestureData)
-                    Log.d("CameraView", "Sent gesture to Flutter: $gestureName (${confidence})")
+                    // Double-check flags before emitting
+                    if (!hasCaptured && eventSink != null) {
+                        eventSink?.success(gestureData)
+                        Log.d("CameraView", "Sent gesture to Flutter: $gestureName (${confidence})")
+                    }
+                    // Stop further processing after first valid emission
+                    stopCaptureAfterFirstGesture()
                 }
             }
         }

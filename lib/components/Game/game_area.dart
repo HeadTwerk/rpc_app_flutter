@@ -30,13 +30,15 @@ class _GameAreaState extends State<GameArea> {
 
   void _onGestureDetected(String gesture, double confidence) {
     // Determine outputs first
-    final mappedPlayer = gestureOutputMap[gesture] ?? 'Rock';
+    final mappedPlayer =
+        gestureOutputMap[gesture] ?? 'Rock'; // fallback to Rock if unmapped
     final systemChoice = systemChoices[_random.nextInt(systemChoices.length)];
     // Record outcome via provider (after mapping, before setState UI rebuild)
     final provider = GameStatsProvider.of(context);
     if (provider != null) {
       if (mappedPlayer != systemChoice) {
         final isWin = winningConditions[mappedPlayer] == systemChoice;
+        // fire-and-forget guarded inside provider
         provider.recordResult(isWin: isWin, isLoss: !isWin);
       }
     }

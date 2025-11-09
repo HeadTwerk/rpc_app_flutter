@@ -9,7 +9,6 @@ const gestureOutputMap = {
   'Victory': 'Scissors',
   'Open_Palm': 'Paper',
   'Closed_Fist': 'Rock',
-  'Pointing_Up': 'Rock',
 };
 
 const systemChoices = ['Rock', 'Paper', 'Scissors'];
