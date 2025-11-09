@@ -17,9 +17,6 @@ import androidx.camera.view.PreviewView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.BinaryMessenger
@@ -38,7 +35,7 @@ class CameraView (
     id: Int,
     creationParams: Map<String?, Any?>?,
     private val activity: FlutterActivity
-) : PlatformView, GestureRecognizerHelper.GestureRecognizerListener, LifecycleEventObserver{
+) : PlatformView, GestureRecognizerHelper.GestureRecognizerListener {
 
     private var constraintLayout = ConstraintLayout(context)
     private var viewFinder = PreviewView(context)
@@ -169,30 +166,50 @@ class CameraView (
         }
     }
 
-    
     override fun dispose() {
-        // Clean up gesture recognizer if initialized
+        Log.d("CameraView", "dispose() called - starting cleanup")
+        
+        // Set flag to stop processing new frames
+        isActive = false
+        
+        // Step 1: Clear the analyzer to stop new frames from being processed
+        imageAnalyzer?.clearAnalyzer()
+        Log.d("CameraView", "ImageAnalyzer cleared")
+        
+        // Step 2: Unbind all camera use cases
+        cameraProvider?.unbindAll()
+        Log.d("CameraView", "Camera use cases unbound")
+        
+        // Step 3: Wait briefly for any in-flight frames to complete
+        Thread.sleep(100)
+        
+        // Step 4: Clean up gesture recognizer
         if(this::gestureRecognizerHelper.isInitialized) {
             gestureRecognizerHelper.clearGestureRecognizer()
+            Log.d("CameraView", "GestureRecognizer cleared")
         }
 
-        // Clean up event channel
+        // Step 5: Clean up event channel
         eventSink = null
         eventChannel.setStreamHandler(null)
+        Log.d("CameraView", "EventChannel cleaned up")
 
-        // Unbind all camera use cases
-        cameraProvider?.unbindAll()
-
-        // Shutdown background executor
-        // backgroundExecutor.shutdown()
-        // try {
-        //     if (!backgroundExecutor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
-        //         backgroundExecutor.shutdownNow()
-        //     }
-        // } catch (e: InterruptedException) {
-        //     backgroundExecutor.shutdownNow()
-        //     Thread.currentThread().interrupt()
-        // }
+        // Step 6: Shutdown background executor
+        backgroundExecutor.shutdown()
+        try {
+            if (!backgroundExecutor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                backgroundExecutor.shutdownNow()
+                Log.d("CameraView", "BackgroundExecutor forcefully shut down")
+            } else {
+                Log.d("CameraView", "BackgroundExecutor shut down gracefully")
+            }
+        } catch (e: InterruptedException) {
+            backgroundExecutor.shutdownNow()
+            Thread.currentThread().interrupt()
+            Log.e("CameraView", "BackgroundExecutor shutdown interrupted", e)
+        }
+        
+        Log.d("CameraView", "dispose() completed successfully")
     }
 
     private fun setupCamera() {
@@ -264,6 +281,18 @@ class CameraView (
     }
 
     private fun recgonizeHand(imageProxy: ImageProxy) {
+        // Check if we're still active and helper is initialized
+        if (!isActive || !this::gestureRecognizerHelper.isInitialized) {
+            imageProxy.close()
+            return
+        }
+        
+        // Check if gesture recognizer is closed
+        if (gestureRecognizerHelper.isClosed()) {
+            imageProxy.close()
+            return
+        }
+        
         gestureRecognizerHelper.recognizeLiveStream(
             imageProxy = imageProxy
         )
@@ -306,36 +335,6 @@ class CameraView (
                     Log.d("CameraView", "Sent gesture to Flutter: $gestureName (${confidence})")
                 }
             }
-        }
-    }
-
-    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        when (event) {
-            Lifecycle.Event.ON_RESUME -> {
-                backgroundExecutor.execute {
-                    if(gestureRecognizerHelper.isClosed()) {
-                        gestureRecognizerHelper.setupGestureRecognizer()
-                    }
-                }
-            }
-
-            Lifecycle.Event.ON_PAUSE -> {
-                if(this::gestureRecognizerHelper.isInitialized) {
-                    backgroundExecutor.execute {
-                        gestureRecognizerHelper.clearGestureRecognizer()
-                    }
-                }
-            }
-
-            Lifecycle.Event.ON_DESTROY -> {
-                backgroundExecutor.shutdown()
-                backgroundExecutor.awaitTermination(
-                    Long.MAX_VALUE,
-                    TimeUnit.NANOSECONDS
-                )
-            }
-
-            else -> {}
         }
     }
 }
