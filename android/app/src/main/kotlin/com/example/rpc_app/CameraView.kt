@@ -44,7 +44,6 @@ class CameraView (
 
     private var backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private var cameraFacing = CameraSelector.LENS_FACING_FRONT
-    private var rotation = viewFinder.display.rotation
     private var imageAnalyzer: ImageAnalysis? = null
     private var preview: Preview? = null
     private var camera: Camera? = null
@@ -175,7 +174,7 @@ class CameraView (
     // TEST bindCameraUseCases
     private fun bindCameraUseCases() {
 
-        val aspectRatioStrategy = AspectRatioStrategy(AspectRatio.RATIO_4_3,
+        val aspectRatioStrategy = AspectRatioStrategy(AspectRatio.RATIO_16_9,
             AspectRatioStrategy.FALLBACK_RULE_NONE
         )
 
@@ -195,12 +194,12 @@ class CameraView (
 
         preview = Preview.Builder()
             .setResolutionSelector(resolutionSelector)
-            .setTargetRotation(rotation)
+            .setTargetRotation(viewFinder.display.rotation)
             .build()
 
         imageAnalyzer = ImageAnalysis.Builder()
             .setResolutionSelector(resolutionSelector)
-            .setTargetRotation(rotation)
+            .setTargetRotation(viewFinder.display.rotation)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
             .build()
@@ -215,7 +214,7 @@ class CameraView (
 
         try {
             camera = cameraProvider.bindToLifecycle(
-                context as LifecycleOwner,
+                activity,
                 cameraSelector,
                 preview,
                 imageAnalyzer
