@@ -28,7 +28,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import androidx.camera.core.ImageProxy
-// import androidx.lifecycle.ViewModel
 
 class CameraView (
     private val context: Context,
@@ -147,16 +146,25 @@ class CameraView (
     }
 
     
-    // TEST DISPOSE
     override fun dispose() {
-        backgroundExecutor.shutdown()
-        try {
-            if (!backgroundExecutor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
-                backgroundExecutor.shutdownNow()
-            }
-        } catch (e: InterruptedException) {
-            backgroundExecutor.shutdownNow()
-        }
+        // // Clean up gesture recognizer if initialized
+        // if(this::gestureRecognizerHelper.isInitialized) {
+        //     gestureRecognizerHelper.clearGestureRecognizer()
+        // }
+
+        // // Unbind all camera use cases
+        // cameraProvider?.unbindAll()
+
+        // // Shutdown background executor
+        // backgroundExecutor.shutdown()
+        // try {
+        //     if (!backgroundExecutor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+        //         backgroundExecutor.shutdownNow()
+        //     }
+        // } catch (e: InterruptedException) {
+        //     backgroundExecutor.shutdownNow()
+        //     Thread.currentThread().interrupt()
+        // }
     }
 
     private fun setupCamera() {
@@ -240,6 +248,7 @@ class CameraView (
     override fun onResults(
         resultBundle: GestureRecognizerHelper.ResultBundle
     ) {
+        Log.d("CameraView", "GestureRecognizer result gesture: ${resultBundle.results.first().gestures()}")
         overlayView.setResults(
             gestureRecognizerResult = resultBundle.results.first(),
             imageHeight = resultBundle.inputImageHeight,

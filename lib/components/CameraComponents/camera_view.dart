@@ -16,11 +16,24 @@ class _CameraViewState extends State<CameraView> {
   @override
   Widget build(BuildContext context) {
     return Platform.isAndroid
-        ? AndroidView(
-            viewType: 'cameraView',
-            layoutDirection: TextDirection.ltr,
-            creationParams: cameraParams,
-            creationParamsCodec: const StandardMessageCodec(),
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+
+            children: <Widget>[
+              Container(
+                width: 300,
+                height: 400,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blueAccent),
+                ),
+                child: AndroidView(
+                  viewType: 'cameraView',
+                  layoutDirection: TextDirection.ltr,
+                  creationParams: cameraParams,
+                  creationParamsCodec: const StandardMessageCodec(),
+                ),
+              ),
+            ],
           )
         : Center(
             child: Text(
