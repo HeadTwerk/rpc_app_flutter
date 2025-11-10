@@ -16,6 +16,17 @@ This Flutter application lets you play Rock–Paper–Scissors using real-time h
 | ----------------------------- | ---------------------------------- | ----------------------------------- |
 | ![Home](assets/home_page.png) | ![Play Area](assets/play_area.png) | ![Result](assets/result_screen.png) |
 
+
+## Videos
+
+https://github.com/user-attachments/assets/d83376c4-b97b-4367-aab4-899f167c015b
+
+
+https://github.com/user-attachments/assets/08a2115a-53b2-4348-9581-5e7d3741a348
+
+
+
+
 ## Tech Stack
 
 | Layer              | Tech                                          |
