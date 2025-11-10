@@ -1,6 +1,6 @@
 # Rock Paper Scissors – Gesture Powered Flutter App
 
-This Flutter application lets you play Rock–Paper–Scissors using real-time hand gesture recognition. The Android native layer (Kotlin + CameraX + MediaPipe Gesture Recognizer) streams recognized gestures into Flutter via an EventChannel. The UI maps those gestures to game choices, computes the outcome, and now persists your lifetime Win/Loss stats locally using `localstore`.
+This Flutter application lets you play Rock–Paper–Scissors using real-time hand gesture recognition. The Android native layer (Kotlin + CameraX + MediaPipe Gesture Recognizer) streams recognized gestures into Flutter via an EventChannel. The UI maps those gestures to game choices, computes the outcome, and now shows your lifetime Win/Loss stats locally using.
 
 ## Features
 
@@ -9,6 +9,12 @@ This Flutter application lets you play Rock–Paper–Scissors using real-time h
 - Result screen with SVG illustrations
 - Persistent stats (wins / losses) stored locally
 - Modular architecture with clear separation (native camera, gesture helper, Flutter UI components, persistence layer)
+
+## Screenshots
+
+| Home                          | Play Area                          | Result                              |
+| ----------------------------- | ---------------------------------- | ----------------------------------- |
+| ![Home](assets/home_page.png) | ![Play Area](assets/play_area.png) | ![Result](assets/result_screen.png) |
 
 ## Tech Stack
 
