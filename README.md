@@ -4,11 +4,10 @@ This Flutter application lets you play Rock–Paper–Scissors using real-time h
 
 ## Features
 
-- Live camera preview with hand gesture recognition (MediaPipe Tasks)
-- Gesture → Game choice mapping (Victory=Scissors, Open_Palm=Paper, Closed_Fist / Pointing_Up=Rock)
+- Live camera preview with hand gesture recognition (MediaPipe Tasks, Live Stream mode)
+- Gesture → Game choice mapping (Victory=Scissors, Open_Palm=Paper, Closed_Fist=Rock)
 - Result screen with SVG illustrations
-- Persistent stats (wins / losses) stored locally
-- Modular architecture with clear separation (native camera, gesture helper, Flutter UI components, persistence layer)
+- Stats (wins / losses) stored locally
 
 ## Screenshots
 
@@ -16,16 +15,11 @@ This Flutter application lets you play Rock–Paper–Scissors using real-time h
 | ----------------------------- | ---------------------------------- | ----------------------------------- |
 | ![Home](assets/home_page.png) | ![Play Area](assets/play_area.png) | ![Result](assets/result_screen.png) |
 
-
 ## Videos
 
 https://github.com/user-attachments/assets/d83376c4-b97b-4367-aab4-899f167c015b
 
-
 https://github.com/user-attachments/assets/08a2115a-53b2-4348-9581-5e7d3741a348
-
-
-
 
 ## Tech Stack
 
@@ -108,12 +102,6 @@ Android permissions: The app requests camera access via a method channel.
 - `statsCollection`, `statsDocId`, `statsFieldWins`, `statsFieldLosses` – persistence keys.
 - `statsTitle`, `winsLabel`, `lossesLabel` – UI labels.
 
-## Adding New Gestures
-
-1. Extend MediaPipe configuration if needed.
-2. Map new gesture name in `gestureOutputMap`.
-3. Adjust `winningConditions` if introducing new move types.
-
 ## Edge Cases Handled
 
 - First run: missing doc → defaults to 0 wins / 0 losses.
@@ -125,17 +113,5 @@ Android permissions: The app requests camera access via a method channel.
 
 - Add tie count & reset stats button.
 - Add unit tests for repository/provider.
-- Support multiple gesture sets or difficulty levels.
-- Implement offline batching if many quick results.
-
-## Troubleshooting
-
-| Issue                      | Cause                  | Fix                                                              |
-| -------------------------- | ---------------------- | ---------------------------------------------------------------- |
-| Stats not updating         | Provider not found     | Ensure `GameStatsProvider` wraps `HomeApp` in `main.dart`        |
-| Crash after closing camera | Analyzer still running | Confirm disposal sequence in `CameraView` (clear analyzer first) |
-| Gesture always Rock        | Mapping missing        | Verify `gestureOutputMap` matches recognized gesture names       |
-
-## License
-
-Internal project. Add licensing info if distributing.
+- Better UI
+- Switch to Fully Dart given MediaPipe package for Gesture Recognition is available
