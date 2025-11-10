@@ -1,20 +1,9 @@
 import 'package:flutter/material.dart';
+import 'home_app.dart';
+import 'state/game_stats_provider.dart';
+import 'services/game_stats_repository.dart';
 
 void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
-  }
+  final repo = GameStatsRepository();
+  runApp(GameStatsProvider(repository: repo, child: const HomeApp()));
 }
